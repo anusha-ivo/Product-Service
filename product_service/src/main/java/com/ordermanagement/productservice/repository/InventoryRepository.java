@@ -2,7 +2,8 @@ package com.ordermanagement.productservice.repository;
 
 import com.ordermanagement.productservice.config.SqlQueryProvider;
 import com.ordermanagement.productservice.dto.Inventory;
-import org.springframework.beans.factory.annotation.Value;
+import com.ordermanagement.productservice.exceptions.ProductException;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -22,7 +23,16 @@ public class InventoryRepository {
     public void createInitialStock(Long productId, Integer qty) {
         String insertQuery = sqlQueryProvider.getQuery("inventory.insert");
 
-        jdbcTemplate.update(insertQuery, productId, qty);
+        int rows = jdbcTemplate.update(insertQuery, productId, qty);
+
+        if (rows == 0) {
+
+            throw new ProductException(
+                    "Failed to create initial stock for product " + productId,
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "STOCK_CREATION_FAILED"
+            );
+        }
     }
     public Optional<Inventory> findByProductId(Long productId) {
 
@@ -39,18 +49,46 @@ public class InventoryRepository {
         );
 
         if (list.isEmpty()) {
-            return Optional.empty();
+            throw new ProductException(
+                    "Inventory not found for product " + productId,
+                    HttpStatus.NOT_FOUND,
+                    "INVENTORY_NOT_FOUND"
+            );
         }
+
 
         return Optional.of(list.get(0));
     }
     public int deductStock(Long productId, Integer qty) {
 
         String deductQuery = sqlQueryProvider.getQuery("inventory.deduct");
-        return jdbcTemplate.update(deductQuery, qty, productId, qty);
+        int updatedRows = jdbcTemplate.update(deductQuery, qty, productId, qty);
+
+        if (updatedRows == 0) {
+            // ⚡ Throw AppException if deduction fails
+            throw new ProductException(
+                    "Failed to deduct " + qty + " units from product " + productId,
+                    HttpStatus.BAD_REQUEST,
+                    "STOCK_DEDUCTION_FAILED"
+            );
+        }
+
+        return updatedRows;
     }
+
     public int restoreStock(Long productId, Integer qty) {
         String restoreQuery = sqlQueryProvider.getQuery("inventory.restore");
-        return jdbcTemplate.update(restoreQuery, qty, productId);
+        int updatedRows = jdbcTemplate.update(restoreQuery, qty, productId);
+
+        if (updatedRows == 0) {
+            // ⚡ Throw AppException if restore fails
+            throw new ProductException(
+                    "Failed to restore " + qty + " units for product " + productId,
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "STOCK_RESTORE_FAILED"
+            );
+        }
+
+        return updatedRows;
     }
 }

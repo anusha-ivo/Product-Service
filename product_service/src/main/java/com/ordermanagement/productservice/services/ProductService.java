@@ -1,13 +1,13 @@
 package com.ordermanagement.productservice.services;
 
-import com.ordermanagement.productservice.exceptions.DuplicateProductException;
-import com.ordermanagement.productservice.exceptions.ProductNotFoundException;
+import com.ordermanagement.productservice.exceptions.ProductException;
 import com.ordermanagement.productservice.dto.Inventory;
 import com.ordermanagement.productservice.dto.Product;
 import com.ordermanagement.productservice.repository.InventoryRepository;
 import com.ordermanagement.productservice.repository.ProductRepository;
 
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +38,11 @@ public Product createProduct(Product product, Integer initialStock) {
             return getProduct(productId);
         }
         catch (DuplicateKeyException ex) {
-            throw new DuplicateProductException("Product with same SKU already exists");
+            throw new ProductException(
+                    "Product with SKU '" + product.getStockKeepingUnit() + "' already exists",
+                    HttpStatus.CONFLICT,
+                    "DUPLICATE_PRODUCT"
+            );
         }
 }
     public Product getProduct(Long productId) {
@@ -46,7 +50,11 @@ public Product createProduct(Product product, Integer initialStock) {
         Optional<Product> optionalProduct = productRepository.findById(productId);//optional avoids null n force us to handle
 
         if (optionalProduct.isEmpty()) {
-            throw new ProductNotFoundException(productId);
+            throw new ProductException(
+                    "Product not found with id " + productId,
+                    HttpStatus.NOT_FOUND,
+                    "PRODUCT_NOT_FOUND"
+            );
         }
 
         Product product = optionalProduct.get();
@@ -75,7 +83,11 @@ public Product createProduct(Product product, Integer initialStock) {
         int rows = productRepository.deactivate(productId);
 
         if (rows == 0) {
-            throw new ProductNotFoundException(productId);
+            throw new ProductException(
+                    "Product not found with id " + productId,
+                    HttpStatus.NOT_FOUND,
+                    "PRODUCT_NOT_FOUND"
+            );
         }
     }
 

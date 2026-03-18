@@ -2,6 +2,7 @@ package com.ordermanagement.productservice.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,12 +25,12 @@ public class GlobalExceptionHandler {
                 "level", level,
                 "severity", severity,
                 "message", message,
-                "httpStatus", status.toString(),
+                "httpStatus", status.name(),
                 "sourceApplication", SOURCE_APP
         );
     }
-    @ExceptionHandler(AppException.class)
-    public ResponseEntity<?> handleAppException(AppException ex) {
+    @ExceptionHandler(ProductException.class)
+    public ResponseEntity<?> handleAppException(ProductException ex) {
 
         HttpStatus status = ex.getStatus();
 
@@ -44,7 +45,39 @@ public class GlobalExceptionHandler {
                 status
         );
     }
-    @ExceptionHandler(Exception.class)
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
+
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .get(0)
+                .getDefaultMessage();
+
+        return new ResponseEntity<>(
+                buildError(
+                        "VALIDATION_ERROR",
+                        HttpStatus.BAD_REQUEST,
+                        message,
+                        "REQUEST",
+                        "NONFATAL"
+                ),
+                HttpStatus.BAD_REQUEST
+        );
+    }@ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDBError(Exception ex) {
+
+        return new ResponseEntity<>(
+                buildError(
+                        "DATA_ERROR",
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid or missing required data",
+                        "REQUEST",
+                        "NONFATAL"
+                ),
+                HttpStatus.BAD_REQUEST
+        );
+    }@ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneric(Exception ex) {
 
         ex.printStackTrace();
