@@ -34,7 +34,9 @@ public class ProductRepository {
             ps.setString(3, product.getDescription());
             ps.setBigDecimal(4, product.getPrice());
             ps.setString(5, product.getCurrency());
-
+            ps.setString(6, product.getStatus());
+            ps.setTimestamp(7, java.sql.Timestamp.valueOf(product.getCreatedAt()));
+            ps.setTimestamp(8, java.sql.Timestamp.valueOf(product.getUpdatedAt()));
             return ps;
         }, keyHolder);
 

@@ -1,13 +1,17 @@
 package com.ordermanagement.productservice.services;
 
+import com.ordermanagement.productservice.exceptions.DuplicateProductException;
 import com.ordermanagement.productservice.exceptions.ProductNotFoundException;
 import com.ordermanagement.productservice.dto.Inventory;
 import com.ordermanagement.productservice.dto.Product;
 import com.ordermanagement.productservice.repository.InventoryRepository;
 import com.ordermanagement.productservice.repository.ProductRepository;
+
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -21,15 +25,25 @@ public class ProductService {
 @Transactional
 
 public Product createProduct(Product product, Integer initialStock) {
-    Long productId = productRepository.create(product);
-    product.setProductId(productId);
-    inventoryRepository.createInitialStock(productId, initialStock);
+        try {
+            product.setStatus("ACTIVE");
+            product.setCreatedAt(LocalDateTime.now());
+            product.setUpdatedAt(LocalDateTime.now());
 
-    return product;
+            Long productId = productRepository.create(product);
+            product.setProductId(productId);
+            inventoryRepository.createInitialStock(productId, initialStock);
+            product.setAvailableQty(initialStock);
+
+            return getProduct(productId);
+        }
+        catch (DuplicateKeyException ex) {
+            throw new DuplicateProductException("Product with same SKU already exists");
+        }
 }
     public Product getProduct(Long productId) {
 
-        Optional<Product> optionalProduct = productRepository.findById(productId);
+        Optional<Product> optionalProduct = productRepository.findById(productId);//optional avoids null n force us to handle
 
         if (optionalProduct.isEmpty()) {
             throw new ProductNotFoundException(productId);
@@ -43,8 +57,8 @@ public Product createProduct(Product product, Integer initialStock) {
         optionalInventory.ifPresent(inventory ->
                 product.setAvailableQty(inventory.getAvailableQty())
         );
-
         return product;
+
     }
     public Product updateProduct(Product product) {
 
