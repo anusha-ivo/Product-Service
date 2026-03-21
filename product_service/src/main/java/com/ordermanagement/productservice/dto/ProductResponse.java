@@ -35,5 +35,5 @@ public class ProductResponse {
     private String status;
 
     @Schema(description = "Available stock quantity of the product", example = "50")
-    private Integer stock;
+    private Integer availableQty;
 }

@@ -66,6 +66,7 @@ public class GlobalExceptionHandler {
         );
     }@ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<?> handleDBError(Exception ex) {
+        ex.printStackTrace();
 
         return new ResponseEntity<>(
                 buildError(

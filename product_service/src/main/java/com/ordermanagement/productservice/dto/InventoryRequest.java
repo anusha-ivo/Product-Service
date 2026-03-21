@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Represents the inventory details of a product")
-public class Inventory {
+public class InventoryRequest {
 
     @NotNull
     @Schema(description = "ID of the product", example = "101", required = true)

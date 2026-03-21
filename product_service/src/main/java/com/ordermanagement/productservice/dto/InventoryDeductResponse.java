@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 @Schema(description = "Response returned after deducting inventory for a product")
-public class InventorydeductResponse {
+public class InventoryDeductResponse {
     @Schema(description = "Message indicating the result of the operation", example = "Stock deducted successfully")
     private String message;
 

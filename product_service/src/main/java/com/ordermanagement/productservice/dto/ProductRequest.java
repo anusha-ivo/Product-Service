@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Represents a product in the inventory system")
-public class Product {
+public class ProductRequest {
 
     @Schema(description = "Unique identifier for the product", example = "101")
     private Long productId;
@@ -38,10 +38,9 @@ public class Product {
     @Schema(description = "Currency code for the price (ISO 4217)", example = "USD", required = true)
     private String currency;
 
-    @NotBlank
-    @Schema(description = "Current status of the product", example = "ACTIVE", required = true)
-    private String status;
-
+    @Min(0)
+    @NotNull
+    private Integer initialStock;
     @Schema(description = "Available quantity of the product in stock", example = "50")
     private Integer availableQty;
 

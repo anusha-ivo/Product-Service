@@ -1,14 +1,15 @@
 package com.ordermanagement.productservice.repository;
 
 import com.ordermanagement.productservice.config.SqlQueryProvider;
-import com.ordermanagement.productservice.dto.Product;
-import org.springframework.beans.factory.annotation.Value;
+import com.ordermanagement.productservice.entity.ProductEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,33 +23,34 @@ public class ProductRepository {
         this.sqlQueryProvider=sqlQueryProvider;
     }
 
-    public Long create(Product product) {
+    public Long create(ProductEntity productEntity) {
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         String insertQuery = sqlQueryProvider.getQuery("product.insert");
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(insertQuery, new String[]{"product_id"});
-            ps.setString(1, product.getStockKeepingUnit());
-            ps.setString(2, product.getName());
-            ps.setString(3, product.getDescription());
-            ps.setBigDecimal(4, product.getPrice());
-            ps.setString(5, product.getCurrency());
-            ps.setString(6, product.getStatus());
-            ps.setTimestamp(7, java.sql.Timestamp.valueOf(product.getCreatedAt()));
-            ps.setTimestamp(8, java.sql.Timestamp.valueOf(product.getUpdatedAt()));
+            ps.setString(1, productEntity.getStockKeepingUnit());
+            ps.setString(2,  productEntity.getName());
+            ps.setString(3,  productEntity.getDescription());
+            ps.setBigDecimal(4,  productEntity.getPrice());
+            ps.setString(5,  productEntity.getCurrency());
+            ps.setString(6, productEntity.getStatus());
+            ps.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+
             return ps;
         }, keyHolder);
 
         Number key = keyHolder.getKey();
         return key != null ? key.longValue() : null;
     }
-    public Optional<Product> findById(Long id) {//optional to value may or may not exist,to avaid null pointer xceptions
+    public Optional<ProductEntity> findById(Long id) {//optional to value may or may not exist,to avaid null pointer xceptions
 
         String findByIdQuery = sqlQueryProvider.getQuery("product.findById");
-        List<Product> list = jdbcTemplate.query(findByIdQuery,
+        List<ProductEntity> list = jdbcTemplate.query(findByIdQuery,
                 (rs, rowNum) -> {
-                    Product p = new Product();
+                    ProductEntity p = new ProductEntity();
                     p.setProductId(rs.getLong("product_id"));
                     p.setStockKeepingUnit(rs.getString("stock_keeping_unit"));
                     p.setName(rs.getString("name"));
@@ -68,13 +70,9 @@ public class ProductRepository {
                 id
         );
 
-        if (list.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(list.get(0));
+        return list.stream().findFirst();
     }
-    public int update(Product product) {
+    public int update(ProductEntity product) {
         String updateQuery = sqlQueryProvider.getQuery("product.update");
         return jdbcTemplate.update(updateQuery,
                 product.getStockKeepingUnit(),

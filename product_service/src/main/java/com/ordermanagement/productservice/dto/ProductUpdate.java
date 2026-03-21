@@ -21,5 +21,5 @@ public class ProductUpdate {
     private String status;
 
     @Schema(description = "Detailed product information after update")
-    private Product product;
+    private ProductResponse product;
 }

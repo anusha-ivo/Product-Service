@@ -2,13 +2,15 @@ package com.ordermanagement.productservice.controller;
 
 
 import com.ordermanagement.productservice.dto.DeleteResponse;
-import com.ordermanagement.productservice.dto.Product;
+import com.ordermanagement.productservice.dto.ProductRequest;
+import com.ordermanagement.productservice.dto.ProductResponse;
 import com.ordermanagement.productservice.dto.ProductUpdate;
 import com.ordermanagement.productservice.services.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +30,12 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody Product product,
-                                           @RequestParam Integer initialStock) {
+    public ResponseEntity<ProductResponse> createProduct( @Valid @RequestBody ProductRequest product
+                                                         ) {
 
-        Product productId = productService.createProduct(product, initialStock);
+        ProductResponse response = productService.createProduct(product);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     @Operation(summary = "Get Product", description = "Fetch product details including available quantity")
     @ApiResponses({
@@ -41,10 +43,10 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProduct(@PathVariable Long id,@RequestHeader(value = "x-conversation-id", required = false)
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id,@RequestHeader(value = "x-conversation-id", required = false)
     String conversationId){
-      Product product = productService.getProduct(id);
-      return ResponseEntity.ok(product);
+        ProductResponse product = productService.getProduct(id);
+        return ResponseEntity.ok(product);
     }
     @Operation(summary = "Update Product", description = "Updates product details")
     @ApiResponses({
@@ -54,12 +56,12 @@ public class ProductController {
     @PutMapping("/{id}")
 
     public ResponseEntity<ProductUpdate> updateProduct(@PathVariable Long id,
-                                                 @RequestBody Product product,@RequestHeader(value = "x-conversation-id", required = false)
+                                                       @RequestBody ProductRequest product, @RequestHeader(value = "x-conversation-id", required = false)
                                                      String conversationId) {
 
         product.setProductId(id);
 
-        Product updatedProduct = productService.updateProduct(product);
+        ProductResponse updatedProduct = productService.updateProduct(id, product);
 
         ProductUpdate response = new   ProductUpdate(
                 "Product updated successfully",
